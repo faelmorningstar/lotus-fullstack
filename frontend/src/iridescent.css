@@ -1,0 +1,60 @@
+
+.iridescent-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #050509;
+}
+
+.light-threads {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.light-thread {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+/* Azul elétrico */
+.thread-blue {
+  filter:
+    drop-shadow(0 0 5px #3185ff)
+    drop-shadow(0 0 14px #2455ff)
+    drop-shadow(0 0 28px #2455ff);
+}
+
+/* Magenta / rosa escuro */
+.thread-pink {
+  filter:
+    drop-shadow(0 0 5px #f052df)
+    drop-shadow(0 0 14px #a336ff)
+    drop-shadow(0 0 28px #a336ff);
+}
+
+/* Verde esmeralda */
+.thread-green {
+  filter:
+    drop-shadow(0 0 5px #28f2c5)
+    drop-shadow(0 0 14px #087d9d)
+    drop-shadow(0 0 28px #087d9d);
+}
+
+/* Conteúdo acima dos fios */
+.lotus-app {
+  position: relative;
+  z-index: 1;
+}
+
+/* Adaptação para telas menores */
+@media (max-width: 600px) {
+  .light-thread {
+    stroke-width: 6;
+    opacity: 0.65;
+  }
+}
