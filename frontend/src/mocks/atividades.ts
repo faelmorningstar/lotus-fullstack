@@ -1,13 +1,4 @@
-
-export type Atividade = {
-  id: number
-  titulo: string
-  descricao: string | null
-  data_atividade: string | null
-  status: string
-  criado_em: string
-}
-
+import type { Atividade } from '../types/atividade';
 export const atividadesMock: Atividade[] = [
   {
     id: 1,
@@ -33,4 +24,4 @@ export const atividadesMock: Atividade[] = [
     status: 'pendente',
     criado_em: '2026-11-22T11:00:00',
   },
-]
+];

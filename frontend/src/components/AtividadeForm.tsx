@@ -1,44 +1,65 @@
+import { useState, type FormEvent } from 'react';
 
-import { useState, type FormEvent } from 'react'
+export type NovaAtividade = {
+  titulo: string;
+  descricao: string | null;
+  data_atividade: string | null;
+};
 
-export default function AtividadeForm() {
-  const [titulo, setTitulo] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [dataAtividade, setDataAtividade] = useState('')
-  const [mensagem, setMensagem] = useState('')
-  const [salvando, setSalvando] = useState(false)
+type AtividadeFormProps = {
+  onCadastrar?: (dados: NovaAtividade) => void | Promise<void>;
+};
+
+export default function AtividadeForm({ onCadastrar }: AtividadeFormProps) {
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [dataAtividade, setDataAtividade] = useState('');
+  const [mensagem, setMensagem] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
   async function cadastrarAtividade(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault()
+    evento.preventDefault();
 
-    setSalvando(true)
-    setMensagem('')
+    setSalvando(true);
+    setMensagem('');
+
+    const dados: NovaAtividade = {
+      titulo: titulo.trim(),
+      descricao: descricao.trim() || null,
+      data_atividade: dataAtividade || null,
+    };
+
+    if (!dados.titulo) {
+      setMensagem('Informe o título da atividade.');
+      setSalvando(false);
+      return;
+    }
 
     try {
-      const resposta = await fetch('/api/atividades', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          titulo,
-          descricao: descricao || null,
-          data_atividade: dataAtividade || null,
-        }),
-      })
+      if (onCadastrar) {
+        await onCadastrar(dados);
+      } else {
+        const resposta = await fetch('/api/atividades', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(dados),
+        });
 
-      if (!resposta.ok) {
-        throw new Error(`HTTP ${resposta.status}`)
+        if (!resposta.ok) {
+          throw new Error(`HTTP ${resposta.status}`);
+        }
       }
 
-      setMensagem('Atividade cadastrada com sucesso!')
-      setTitulo('')
-      setDescricao('')
-      setDataAtividade('')
+      setMensagem('Atividade cadastrada com sucesso!');
+      setTitulo('');
+      setDescricao('');
+      setDataAtividade('');
     } catch {
-      setMensagem('Não foi possível cadastrar a atividade.')
+      setMensagem('Não foi possível cadastrar a atividade.');
     } finally {
-      setSalvando(false)
+      setSalvando(false);
     }
   }
 
@@ -83,7 +104,9 @@ export default function AtividadeForm() {
         </button>
       </form>
 
-      {mensagem && <p role="status">{mensagem}</p>}
+      {mensagem && (
+        <p role="status">{mensagem}</p>
+      )}
     </section>
   )
 }
