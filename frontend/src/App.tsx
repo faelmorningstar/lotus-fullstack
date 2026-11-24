@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 
 import ApiStatus from './components/ApiStatus';
@@ -16,13 +17,17 @@ import './App.css';
 import './iridescent.css';
 
 function App() {
-const [atividades, setAtividades] = useState<Atividade[]>([]);
-
+  const [atividades, setAtividades] = useState<Atividade[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroCarregamento, setErroCarregamento] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function carregarAtividades() {
+      setCarregando(true);
+      setErroCarregamento(null);
+
       try {
         const dados = await atividadesApi.listar();
 
@@ -32,6 +37,13 @@ const [atividades, setAtividades] = useState<Atividade[]>([]);
       } catch (erro) {
         if (!controller.signal.aborted) {
           console.error('Erro ao carregar atividades:', erro);
+          setErroCarregamento(
+            'Não foi possível carregar as atividades. Verifique a conexão com o servidor.'
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setCarregando(false);
         }
       }
     }
@@ -41,64 +53,60 @@ const [atividades, setAtividades] = useState<Atividade[]>([]);
     return () => controller.abort();
   }, []);
 
+  async function cadastrarAtividade(dados: NovaAtividade) {
+    try {
+      const novaAtividade = await atividadesApi.criar(dados);
 
-async function cadastrarAtividade(dados: NovaAtividade) {
-  try {
-    const novaAtividade = await atividadesApi.criar(dados);
-
-    setAtividades((anteriores) => [
-      novaAtividade,
-      ...anteriores,
-    ]);
-  } catch (erro) {
-    console.error('Erro ao cadastrar atividade:', erro);
-    window.alert('Não foi possível cadastrar a atividade.');
-    throw erro;
+      setAtividades((anteriores) => [
+        novaAtividade,
+        ...anteriores,
+      ]);
+    } catch (erro) {
+      console.error('Erro ao cadastrar atividade:', erro);
+      window.alert('Não foi possível cadastrar a atividade.');
+      throw erro;
+    }
   }
-}
 
+  async function alterarStatus(
+    id: number,
+    novoStatus: StatusAtividade
+  ) {
+    try {
+      const atividadeAtualizada =
+        await atividadesApi.atualizarStatus(id, novoStatus);
 
-async function alterarStatus(
-  id: number,
-  novoStatus: StatusAtividade
-) {
-  try {
-    const atividadeAtualizada =
-      await atividadesApi.atualizarStatus(id, novoStatus);
+      setAtividades((anteriores) =>
+        anteriores.map((atividade) =>
+          atividade.id === id
+            ? atividadeAtualizada
+            : atividade
+        )
+      );
+    } catch (erro) {
+      console.error('Erro ao alterar status:', erro);
+      window.alert('Não foi possível alterar o status da atividade.');
+    }
+  }
 
-    setAtividades((anteriores) =>
-      anteriores.map((atividade) =>
-        atividade.id === id
-          ? atividadeAtualizada
-          : atividade
-      )
+  async function excluirAtividade(id: number) {
+    const confirmou = window.confirm(
+      'Tem certeza que deseja excluir esta atividade?'
     );
-  } catch (erro) {
-    console.error('Erro ao alterar status:', erro);
-    window.alert('Não foi possível alterar o status da atividade.');
+
+    if (!confirmou) return;
+
+    try {
+      await atividadesApi.excluir(id);
+
+      setAtividades((anteriores) =>
+        anteriores.filter((atividade) => atividade.id !== id)
+      );
+    } catch (erro) {
+      console.error('Erro ao excluir atividade:', erro);
+      window.alert('Não foi possível excluir a atividade.');
+    }
   }
-}
-
-
-async function excluirAtividade(id: number) {
-  const confirmou = window.confirm(
-    'Tem certeza que deseja excluir esta atividade?'
-  );
-
-  if (!confirmou) return;
-
-  try {
-    await atividadesApi.excluir(id);
-
-    setAtividades((anteriores) =>
-      anteriores.filter((atividade) => atividade.id !== id)
-    );
-  } catch (erro) {
-    console.error('Erro ao excluir atividade:', erro);
-    window.alert('Não foi possível excluir a atividade.');
-  }
-}
-
 
   return (
     <>
@@ -116,11 +124,17 @@ async function excluirAtividade(id: number) {
         </section>
 
         <section>
-          <AtividadesList
-            atividades={atividades}
-            onAlterarStatus={alterarStatus}
-            onExcluir={excluirAtividade}
-          />
+          {carregando ? (
+            <p role="status">Carregando atividades...</p>
+          ) : erroCarregamento ? (
+            <p role="alert">{erroCarregamento}</p>
+          ) : (
+            <AtividadesList
+              atividades={atividades}
+              onAlterarStatus={alterarStatus}
+              onExcluir={excluirAtividade}
+            />
+          )}
         </section>
       </main>
     </>
