@@ -17,8 +17,6 @@ export default function AtividadesList({
     <section>
       <h2>Minhas atividades</h2>
 
-      <p role="status">Modo demonstração — dados fictícios</p>
-
       {atividades.length === 0 ? (
         <p>Nenhuma atividade cadastrada.</p>
       ) : (

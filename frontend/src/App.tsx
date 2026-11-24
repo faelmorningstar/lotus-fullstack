@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import ApiStatus from './components/ApiStatus';
 import AtividadeForm from './components/AtividadeForm';
 import AtividadesList from './components/AtividadesList';
 import IridescentBackground from './components/IridescentBackground';
+import { atividadesApi } from './services/atividadesApi';
 
 import { atividadesMock } from './mocks/atividades';
 
@@ -21,38 +22,87 @@ function App() {
     ...atividadesMock,
   ]);
 
-  function cadastrarAtividade(dados: NovaAtividade) {
-    const novaAtividade: Atividade = {
-      id: Date.now(),
-      titulo: dados.titulo,
-      descricao: dados.descricao,
-      data_atividade: dados.data_atividade,
-      status: 'pendente',
-      criado_em: new Date().toISOString(),
-    };
 
-    setAtividades((anteriores) => [novaAtividade, ...anteriores]);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function carregarAtividades() {
+      try {
+        const dados = await atividadesApi.listar();
+
+        if (!controller.signal.aborted) {
+          setAtividades(dados);
+        }
+      } catch (erro) {
+        if (!controller.signal.aborted) {
+          console.error('Erro ao carregar atividades:', erro);
+        }
+      }
+    }
+
+    void carregarAtividades();
+
+    return () => controller.abort();
+  }, []);
+
+
+async function cadastrarAtividade(dados: NovaAtividade) {
+  try {
+    const novaAtividade = await atividadesApi.criar(dados);
+
+    setAtividades((anteriores) => [
+      novaAtividade,
+      ...anteriores,
+    ]);
+  } catch (erro) {
+    console.error('Erro ao cadastrar atividade:', erro);
+    window.alert('Não foi possível cadastrar a atividade.');
+    throw erro;
   }
+}
 
-  function alterarStatus(id: number, novoStatus: StatusAtividade) {
+
+async function alterarStatus(
+  id: number,
+  novoStatus: StatusAtividade
+) {
+  try {
+    const atividadeAtualizada =
+      await atividadesApi.atualizarStatus(id, novoStatus);
+
     setAtividades((anteriores) =>
       anteriores.map((atividade) =>
-        atividade.id === id ? { ...atividade, status: novoStatus } : atividade
+        atividade.id === id
+          ? atividadeAtualizada
+          : atividade
       )
     );
+  } catch (erro) {
+    console.error('Erro ao alterar status:', erro);
+    window.alert('Não foi possível alterar o status da atividade.');
   }
+}
 
-  function excluirAtividade(id: number) {
-    const confirmou = window.confirm(
-      'Tem certeza que deseja excluir esta atividade?'
-    );
 
-    if (!confirmou) return;
+async function excluirAtividade(id: number) {
+  const confirmou = window.confirm(
+    'Tem certeza que deseja excluir esta atividade?'
+  );
+
+  if (!confirmou) return;
+
+  try {
+    await atividadesApi.excluir(id);
 
     setAtividades((anteriores) =>
       anteriores.filter((atividade) => atividade.id !== id)
     );
+  } catch (erro) {
+    console.error('Erro ao excluir atividade:', erro);
+    window.alert('Não foi possível excluir a atividade.');
   }
+}
+
 
   return (
     <>
