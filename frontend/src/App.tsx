@@ -6,8 +6,6 @@ import AtividadesList from './components/AtividadesList';
 import IridescentBackground from './components/IridescentBackground';
 import { atividadesApi } from './services/atividadesApi';
 
-import { atividadesMock } from './mocks/atividades';
-
 import type {
   Atividade,
   NovaAtividade,
@@ -18,9 +16,7 @@ import './App.css';
 import './iridescent.css';
 
 function App() {
-  const [atividades, setAtividades] = useState<Atividade[]>(() => [
-    ...atividadesMock,
-  ]);
+const [atividades, setAtividades] = useState<Atividade[]>([]);
 
 
   useEffect(() => {
